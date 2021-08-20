@@ -35,7 +35,9 @@ enum BombState {
   Armed,
 
   Defused,
-  Fired 
+  Fired,
+
+  Finished
 };
 
 struct Vector3 {
@@ -150,15 +152,54 @@ void renderArm() {
 }
 
 void renderDefused() {
-  for(int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CRGB(0, 255, 0);
+  for(int j = 0; j < 6; j++) {
+    for(int i = 0; i < NUM_LEDS; i++) {
+      leds[i] = CRGB(0, 255, 0);
+    }
+
+    if(j % 2 == 0) {
+      FastLED.setBrightness(255);
+      FastLED.show();
+
+      tone(PIEZO_PIN, 1200);
+      delay(50);
+    } else {
+      FastLED.setBrightness(0);
+      FastLED.show();
+
+      noTone(PIEZO_PIN);
+      delay(120);
+    }
   }
+
+  for(int i = 255; i >= 0; i--) {
+    FastLED.setBrightness(i);
+    FastLED.show();
+    
+    tone(PIEZO_PIN, i * 4);
+    delay(10);
+  }
+
+  delay(200);
+  noTone(PIEZO_PIN);
 }
 
 void renderFired() {
   for(int i = 0; i < NUM_LEDS; i++) {
     leds[i] = CRGB(255, 0, 0);
   }
+  FastLED.show();
+  tone(PIEZO_PIN, 1300);
+  
+  delay(80);
+
+  for(int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = CRGB(0, 0, 0);
+  }
+  FastLED.show();
+  noTone(PIEZO_PIN);
+
+  delay(140);
 }
 
 
@@ -226,7 +267,7 @@ void loop() {
     case BombState::Defused:
     {
       renderDefused();
-      FastLED.show();
+      state = BombState::Finished;
       break;
     }
 
