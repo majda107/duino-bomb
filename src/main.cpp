@@ -281,11 +281,14 @@ void playNote(char note, int duration)
   }
 }
 
+bool even = true;
 void renderPartyHue() {
+  even = !even;
+
   for (int i = 0; i < NUM_LEDS; i++)
   {
     auto color = hue((i * (360 / NUM_LEDS) + partyAngle) * PI / 180);
-    leds[i] = CRGB(color.x, color.y, color.z);
+    leds[i] = (even ? i % 2  == 0 : i % 2 != 0) ? CRGB(color.x, color.y, color.z) : CRGB(0, 0, 0);
   }
 
   partyAngle += 60;
@@ -317,6 +320,8 @@ void renderParty()
     delay(150);
     renderPartyHue();
   }
+
+  delay(1500);
 }
 
 void loop()
