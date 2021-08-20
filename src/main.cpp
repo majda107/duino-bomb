@@ -361,6 +361,18 @@ void renderParty()
   delay(1500);
 }
 
+bool checkLose() {
+  for(int i = 0; i < sizeof(LOSE_CABLES) / sizeof(int); i++) {
+    if (digitalRead(LOSE_CABLES[i]) == HIGH && (state == BombState::Armed || state == BombState::Disarmed))
+    {
+      state = BombState::Fired;
+      return true;
+    }
+  }
+
+  return false;
+}
+
 void loop()
 {
 
@@ -488,14 +500,11 @@ void loop()
   // TODO check all cables
   if (digitalRead(WIN_CABLE) == HIGH && (state == BombState::Armed || state == BombState::Disarmed))
   {
+    delay(100);
+    if(checkLose()) return;
+
     state = BombState::Defused;
   }
 
-  for(int i = 0; i < sizeof(LOSE_CABLES) / sizeof(int); i++) {
-    if (digitalRead(LOSE_CABLES[i]) == HIGH && (state == BombState::Armed || state == BombState::Disarmed))
-    {
-      state = BombState::Fired;
-      break;
-    }
-  }
+  checkLose();
 }
