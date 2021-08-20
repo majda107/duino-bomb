@@ -7,8 +7,8 @@
 #define PIEZO_PIN 6
 #define SETUP_PIN 2
 
-#define RED_CABLE 9
-#define GREEN_CABLE 8
+#define WIN_CABLE 8
+const int LOSE_CABLES[] = {9};
 
 #define NUM_LEDS 24
 #define BRIGHTNESS 255
@@ -128,8 +128,10 @@ void setup()
   pinMode(PIEZO_PIN, OUTPUT);
   pinMode(SETUP_PIN, INPUT_PULLUP);
 
-  pinMode(RED_CABLE, INPUT_PULLUP);
-  pinMode(GREEN_CABLE, INPUT_PULLUP);
+  pinMode(WIN_CABLE, INPUT_PULLUP);
+  for(int i = 0; i < sizeof(LOSE_CABLES) / sizeof(int); i++) {
+    pinMode(LOSE_CABLES[i], INPUT_PULLUP);
+  }
 
   Serial.begin(9600);
 }
@@ -214,8 +216,43 @@ void renderDefused()
   noTone(PIEZO_PIN);
 }
 
+bool firedSequence = false;
 void renderFired()
 {
+  if(!firedSequence) {
+    firedSequence = true;
+
+    for (int i = 0; i < NUM_LEDS; i++)
+    {
+      leds[i] = CRGB(255, 0, 0);
+    }
+
+  for (int i = 255; i >= 0; i-=2)
+  {
+    FastLED.setBrightness(i);
+    FastLED.show();
+
+    tone(PIEZO_PIN, i * 5);
+    delay(10);
+  }
+
+    FastLED.setBrightness(0);
+    FastLED.show();
+
+  delay(400);
+  noTone(PIEZO_PIN);
+  delay(1500);
+
+  for (int i = 0; i < 255; i++)
+  {
+    FastLED.setBrightness(i);
+    FastLED.show();
+
+    tone(PIEZO_PIN, i * 4);
+    delay(3);
+  }
+  }
+
   for (int i = 0; i < NUM_LEDS; i++)
   {
     leds[i] = CRGB(255, 0, 0);
@@ -385,6 +422,10 @@ void loop()
         FastLED.show();
       }
 
+      if ((commonElapsed / NUM_LEDS) >= NUM_LEDS) {
+        state = BombState::Fired;
+      }
+
       ledInLapCount++;
       commonTimer.reset();
     }
@@ -445,13 +486,16 @@ void loop()
   }
 
   // TODO check all cables
-  if (digitalRead(RED_CABLE) == HIGH && (state == BombState::Armed || state == BombState::Disarmed))
-  {
-    state = BombState::Fired;
-  }
-
-  if (digitalRead(GREEN_CABLE) == HIGH && (state == BombState::Armed || state == BombState::Disarmed))
+  if (digitalRead(WIN_CABLE) == HIGH && (state == BombState::Armed || state == BombState::Disarmed))
   {
     state = BombState::Defused;
+  }
+
+  for(int i = 0; i < sizeof(LOSE_CABLES) / sizeof(int); i++) {
+    if (digitalRead(LOSE_CABLES[i]) == HIGH && (state == BombState::Armed || state == BombState::Disarmed))
+    {
+      state = BombState::Fired;
+      break;
+    }
   }
 }
