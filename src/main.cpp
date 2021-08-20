@@ -22,7 +22,8 @@ char notes[] = "GGAGcB GGAGdc GGxecBA yyecdc";
 int beats[] = {2, 2, 8, 8, 8, 16, 1, 2, 2, 8, 8, 8, 16, 1, 2, 2, 8, 8, 8, 8, 16, 1, 2, 2, 8, 8, 8, 16};
 
 // CUSTOM PROPS
-const int DISARM_ELAPSED = NUM_LEDS * 4 + 16;
+const int DISARM_ELAPSED = NUM_LEDS * 12 + 16;
+const int MINUTE_LAPS = 2;
 // END CUSTOM PROPS
 
 // void drawLoop();
@@ -151,7 +152,7 @@ void renderArm()
     }
 
     // elapsed minutes progress
-    if (i < (commonElapsed / NUM_LEDS))
+    if (i < (commonElapsed / (NUM_LEDS * MINUTE_LAPS)))
     {
       leds[i] = CRGB(255, 0, 0);
     }
@@ -434,7 +435,7 @@ void loop()
         FastLED.show();
       }
 
-      if ((commonElapsed / NUM_LEDS) >= NUM_LEDS) {
+      if ((commonElapsed / (NUM_LEDS * MINUTE_LAPS)) >= NUM_LEDS) {
         state = BombState::Fired;
       }
 
