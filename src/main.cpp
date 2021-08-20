@@ -281,18 +281,22 @@ void playNote(char note, int duration)
   }
 }
 
-void renderParty()
-{
+void renderPartyHue() {
   for (int i = 0; i < NUM_LEDS; i++)
   {
     auto color = hue((i * (360 / NUM_LEDS) + partyAngle) * PI / 180);
     leds[i] = CRGB(color.x, color.y, color.z);
   }
 
-  partyAngle += 5;
+  partyAngle += 60;
 
   FastLED.setBrightness(70);
   FastLED.show();
+}
+
+void renderParty()
+{
+  renderPartyHue();
 
   for (int i = 0; i < 28; i++)
   {
@@ -311,6 +315,7 @@ void renderParty()
     // pause between notes
 
     delay(150);
+    renderPartyHue();
   }
 }
 
