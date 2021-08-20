@@ -37,7 +37,9 @@ enum BombState {
   Defused,
   Fired,
 
-  Finished
+  Finished,
+
+  Party
 };
 
 struct Vector3 {
@@ -102,6 +104,9 @@ Timer commonTimer(1000 / (NUM_LEDS + 1));
 byte ledInLapCount = 0;
 byte commonPosition = 0;
 unsigned long commonElapsed = DISARM_ELAPSED;
+
+// PARTY STATE
+unsigned long partyAngle = 0;
 
 void setup() {
 
@@ -172,12 +177,14 @@ void renderDefused() {
     }
   }
 
+  delay(50);
+
   for(int i = 255; i >= 0; i--) {
     FastLED.setBrightness(i);
     FastLED.show();
     
     tone(PIEZO_PIN, i * 4);
-    delay(10);
+    delay(11);
   }
 
   delay(200);
@@ -200,6 +207,19 @@ void renderFired() {
   noTone(PIEZO_PIN);
 
   delay(140);
+}
+
+
+void renderParty() {
+  for(int i = 0; i < NUM_LEDS; i++) {
+    auto color = hue((i * (360 / NUM_LEDS) + partyAngle) * PI / 180);
+    leds[i] = CRGB(color.x, color.y, color.z);
+  }
+
+  partyAngle += 5;
+
+  FastLED.setBrightness(70);
+  FastLED.show();
 }
 
 
@@ -277,6 +297,32 @@ void loop() {
       FastLED.show();
       break;
     }
+
+    case BombState::Finished:
+    {
+      Serial.println("PLEASE RESTART THE BOMB...");
+
+      if(digitalRead(SETUP_PIN) == LOW)
+      {
+        delay(3000);
+        if(digitalRead(SETUP_PIN) == LOW)
+        {
+          Serial.println("ENTERED PARTY MODE");
+
+          // activate party mode
+          state = BombState::Party;
+          break;
+        }
+      }
+
+      break;
+    }
+
+    case BombState::Party:
+    {
+      renderParty();
+      break;
+    }
   }
 
   if(digitalRead(SETUP_PIN) == LOW && state == BombState::Setup) {
@@ -298,18 +344,3 @@ void loop() {
     state = BombState::Defused;
   }
 }
-
-// int position = 0;
-// void drawLoop()
-// {
-//  position++;
-//  if(position > NUM_LEDS -1)
-//   position = 0;
-//   for (int i = 0; i < NUM_LEDS ; i++)
-//   {
-//     leds[i] = CRGB(0,0,0);
-//     if(i == position)
-//       leds[i] = CRGB(50,50,50);
-//   }
-
-// }
